@@ -1,0 +1,27 @@
+[ 
+   { 
+      "year":"2018",
+      "revenue":296.6,
+      "expense":304.7
+   },
+   { 
+      "year":"2017",
+      "revenue":297.8,
+      "expense":305.0
+   },
+   { 
+      "year":"2016",
+      "revenue":309.7,
+      "expense":315.2
+   },
+   { 
+      "year":"2015",
+      "revenue":276.8,
+      "expense":284.5
+   },
+   { 
+      "year":"2014",
+      "revenue":262.5,
+      "expense":266.0
+   }
+]
