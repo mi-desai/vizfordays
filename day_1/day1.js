@@ -61,7 +61,8 @@ var app = new Vue({
 
             let line = d3.line()
                     .x(function(d) {return d.year})
-                    .y(function(d) {return d.value});
+                    .y(function(d) {return d.value})
+                    .curve(d3.curveStep);
             
             let path = line(input);
 
