@@ -1,4 +1,4 @@
-# Day 3
+# Day 6
 
 Visualization Type: Line Graph <br>
 Data Source: Randomly Generated <br>
