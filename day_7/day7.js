@@ -1,10 +1,5 @@
 // day 7
 
-// goals
-// get lookups right
-// get circles drawn for each series
-// get dotted lines drawn to each dot
-
 async function drawChart() {
     let dataset = await d3.csv('../data/drilling.csv', function(d) {
         return {
@@ -33,10 +28,10 @@ async function drawChart() {
         width: window.innerWidth * 0.7,
         height: window.innerWidth * 0.5,
         margins: {
-            top: 10,
-            bottom: (window.innerHeight * 0.7) * 0.2, 
-            left: (window.innerWidth * 0.5) * 0.075, 
-            right: 10
+            top: 20,
+            bottom: 20, 
+            left: 30, 
+            right: 5
         }
     }
 
@@ -167,93 +162,80 @@ async function drawChart() {
         .style('font-size', '1.4em')
         .text('Rigs')
     
-    const xAxisLabel = xAxis.append('text')
-        .attr('x', dimensions.boundedWidth / 2)
-        .attr('y', dimensions.margins.top * 3.5)
-        .attr('fill', 'black')
-        .style('font-size', '1.4em')
-        .text('Time')
-    
-    //binding event listeners to a transparent rect that overlays "bounds"
-    //this allows all the mouseover, mousemove, and mouseout functions to be able to capture all the movements of the mouse within the graph
+    // binding event listeners to a transparent rect that overlays "bounds"
+    // this allows all the mouseover, mousemove, and mouseout functions to be able to capture all the movements of the mouse within the graph
     bounds.append('rect')
         .style('fill', 'none')
         .style('pointer-events', 'all')
-        .attr('width', dimensions.boundedWidth)
+        .attr('width', dimensions.width)
         .attr('height', dimensions.boundedHeight)
-        .style('transform', `translate(${5}px, ${0}px)`)
         .on('mouseover', mouseover)
         .on('mousemove', mousemove)
-        .on('mouseout', mouseout)
+        .on('mouseout', mouseout);
     
-    let permianDot = bounds.append('g')
+    let permianDot = bounds
         .append('circle')
-            .style('fill', 'none')
-            .attr('stroke', 'black')
-            .attr('r', 8.5)
-            .style('transform', `translate(${dimensions.margins.left}px, ${dimensions.margins.top}px)`)
+            .style('fill', 'teal')
+            .attr('stroke', 'teal')
+            .attr('r', 8)
             .style('opacity', 0)
     
-    let permianText = bounds.append('g')
-        .append('text')
-            .style('opacity', 0)
-            .attr('text-anchor', 'left')
-            .style('transform', `translate(${dimensions.margins.left}px, ${dimensions.margins.top}px)`)
-            .attr('alignment-baseline', 'middle')
+    bounds.append('line')
+        .attr('class', 'focuslineX')
+    
+    bounds.append('line')
+        .attr('class', 'focuslineY')
     
     function mouseover() {
 
         permianDot.style('opacity', 1);
-        permianText.style('opacity', 1);
+        bounds.select('.focuslineX').style('opacity', 1);
+        bounds.select('.focuslineY').style('opacity', 1);
         
     }
 
     function mousemove() {
-        //updating the positions of x and y for the "tooltip dot"
 
-        //get and update mouse positions
+        // all we want is the value of X from the mouse
         let xLookup = xScale.invert(d3.mouse(this)[0]);
-        let yLookup = yScale.invert(d3.mouse(this)[1]);
 
-        console.log("date from mouse", xLookup);
-        console.log('Permian value from mouse', yLookup);
+        // the months as an array will be retrieved as an array and mapped to the dateParser function to return real dates
+        let monthSeries = retrieveArray(dataset, "month").map(d => dateParser(d));
 
-        // these function calls will return any particular key's values as an array
-
-        let permianSeries = retrieveArray(dataset, "permian");
-        let monthSeries = retrieveArray(dataset, "month");
-
-
-        //need to experiment more with the bisector functions - these don't quite work
-        let closestY = d3.bisectLeft(permianSeries, yLookup);
+        // bisector function used to query the closest date index from the data
         let closestX = d3.bisectLeft(monthSeries, xLookup);
-        // console.log(closestY);
-
-        // let test = yBisect.right(dataset, yLookup);
-        // console.log(test, dataset[test]); 
-
-        // this is the problem, the date bisector is not working correctly - it always returns index 1
-        // console.log("date index", dateBisector(dataset, xLookup, 1));
-
-        // another issue, the value bisector is not working either
-        // console.log("permian index", bisector(dataset, yLookup, 1));
-
-        //translate the returned bisector lookups to values
-        // let yValuePermian = dataset[closestY].permian;
-        // console.log(closestY);
-        // let xValue = dataset[closestX].month;
-        // console.log(closestX);
 
         //pass the data values to scales and attributes 
-        // permianDot
-        //     .attr('cx', xScale(xValue))
-        //     .attr('cy', yScale(yValuePermian))
+        permianDot
+            .attr('cx', xScale(dateParser(dataset[closestX].month)))
+            .attr('cy', yScale(dataset[closestX].permian));
+        
+        bounds.select('.focuslineX')
+            .attr('x1', xScale(dateParser(dataset[closestX].month)) - 20)
+            .attr('x2', dimensions.boundedWidth - dimensions.boundedWidth + dimensions.margins.left)
+            .attr('y1', yScale(dataset[closestX].permian))
+            .attr('y2', yScale(dataset[closestX].permian))
+            .style('stroke', 'black')
+            .style('stroke-width', 2)
+            .style('stroke-dasharray', 3)
+            .style('opacity', 1);
+        
+        bounds.select('.focuslineY')
+            .attr('x1', xScale(dateParser(dataset[closestX].month)))
+            .attr('y1', yScale(dataset[closestX].permian) + 20)
+            .attr('x2', xScale(dateParser(dataset[closestX].month)))
+            .attr('y2', dimensions.boundedHeight)
+            .style('stroke', 'black')
+            .style('stroke-width', 2)
+            .style('stroke-dasharray', 3)
+            .style('opacity', 1);
     }
 
     function mouseout() {
         
         permianDot.style('opacity', 0);
-        permianText.style('opacity', 0);
+        bounds.select('.focuslineX').style('opacity', 0);
+        bounds.select('.focuslineY').style('opacity', 0);
     }
     
 }
@@ -276,14 +258,11 @@ function findYScale(data) {
     return result;
 }
 
-//responsive resize - that was easy!
+//responsive resize
 $(window).on('resize', function() {
     d3.selectAll('svg').remove();
     drawChart();
 });
-
-let yBisect = d3.bisector(d => d.permian);
-let xBisect = d3.bisector(d => d.month);
 
 function retrieveArray(data, name) {
     let result = [];
