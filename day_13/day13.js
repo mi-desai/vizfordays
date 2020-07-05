@@ -91,7 +91,7 @@ async function drawChart() {
         .data(slices)
         .enter();
 
-    paths.append('path')
+    paths.append('path').transition().duration(500).ease(d3.easeLinear)
         .attr('id', function(d) { return d.id; })
         .attr('d', function(d) { return lineFunction(d.values); })
         .attr('fill', 'none')
@@ -103,12 +103,9 @@ async function drawChart() {
         .call(d3.axisLeft().scale(yScale))
             .attr('class', 'dynamicAxis')
             .style('transform', `translateX(${dimensions.margins.left}px)`);
-
-    let xAxisGenerator = d3.axisBottom()
-        .scale(xScale);
     
     let xAxis = bounds.append('g')
-        .call(xAxisGenerator)
+        .call(d3.axisBottom().scale(xScale))
             .style('transform', `translateY(${dimensions.boundedHeight}px)`);
     
     //axis label
