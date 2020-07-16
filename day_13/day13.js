@@ -1,10 +1,5 @@
 // day 13
-// debug enter process - check
-// transition yScale data values - check
-// smooth transition to updated yScale - check
-// remove series when boxes are unchecked - doesn't work
-// new series are drawn in - check
-// color scale applied - working
+// selection being passed to updateChart() is wrong
 
 async function drawChart() {
     //only load the data once
@@ -21,6 +16,7 @@ async function drawChart() {
     })
 
     const duration = 500;
+
     //abbreviated month and abbreviated year are encoded %b and %y respectively in the timeParse function
     const dateParser = d3.timeParse("%b-%y");
 
@@ -86,10 +82,12 @@ async function drawChart() {
         .x(function(d) { return xScale(d.month); })
         .y(function(d) { return yScale(d.rigs); })
         .curve(d3.curveCardinal.tension(0.01));
-    
-    let paths = bounds.selectAll('.basins')
+
+    var paths = bounds.selectAll('.basins')
         .data(slices)
         .enter();
+
+    console.log("initial selection", bounds.selectAll('.basins'));
 
     paths.append('path').transition().duration(500).ease(d3.easeLinear)
         .attr('id', function(d) { return d.id; })
@@ -98,6 +96,8 @@ async function drawChart() {
         .attr('stroke', function(d, i) { return colors[i] })
         .attr('stroke-width', 5)
         .attr('class', 'basins')
+
+    console.log("selection after appending initial paths", paths);
     
     let yAxis = bounds.append('g')
         .call(d3.axisLeft().scale(yScale))
@@ -234,7 +234,7 @@ async function drawChart() {
 
         for (let i = 0; i < values.length; i++) {
             if (values[i] === 1) {
-                updates.push(keys[i])
+                updates.push(keys[i]);
             }
 
             if (values[i] === 0) {
@@ -277,17 +277,28 @@ async function drawChart() {
                 .style('transform', `translateX(${dimensions.margins.left}px)`);
 
         // this doesn't remove data series ... not sure where to put .exit() or .remove()
-        paths = bounds.selectAll('.basins').data(newSlices);
+        // paths = bounds.selectAll('.basins').data(newSlices, function(d) {return d.values;});
+        paths = bounds.selectAll('.basins')
+            .data(newSlices, function(d) {return d})
+            .enter();
         
-        paths.join('path').transition().duration(duration).ease(d3.easeLinear)
+        paths.append('path').transition().duration(duration).ease(d3.easeLinear)
             .attr('id', function(d) { return d.id; })
             .attr('d', function(d) { return lineFunction(d.values); })
             .attr('fill', 'none')
             .attr('stroke', function(d, i) { return colors[i] })
             .attr('stroke-width', 5)
+            .attr('class', 'basins')
+            .each(function(d) {
+                console.log("is this working?", d.id);
+            })
+
+        paths.exit().remove();
 
     }
 
+
+    //utility functions
     //finding yscale domain
     function findYScale(data) {
         let evaluation = [];
@@ -332,7 +343,7 @@ async function drawChart() {
         return result;
     }
 
-    //slicing and rearranging
+    //slicing and rearranging - this is basically d3.nest()
     function slice(data, ids, dateParser) {
 
         let result = ids.map(function(id) {
