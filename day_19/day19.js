@@ -1,9 +1,20 @@
-// filtering for country shapes
+// getting all countries of Europe 
 
 async function drawChart() {
     let dataset = await d3.json('../data/world_geojson.json');
 
-    console.log(dataset.features[0]);
+    let region = [
+        
+                    "France", "Belgium", "Germany", "Ireland", 
+                    "Norway", "Sweden", "Iceland", "England", 
+                    "Spain", "Switzerland", "Italy", "Ukraine", "Belarus", "Estonia",
+                    "Latvia", "Lithuania", "Bulgaria", "Romania", "Poland", "Malta",
+                    "Moldova", "Netherlands", "Greece", "Denmark", "Hungary", "Slovakia",
+                    "Czech Republic", "Croatia", "Slovenia", "Albania", "Cyprus", "Austria",
+                    "Finland", "Bosnia and Herzegovina", "Portugal", "Andorra", "San Marino",
+                    "Macedonia", "Luxembourg", "Republic of Serbia", "Moldova", "Turkey", 
+                    "Montenegro", "Kosovo"
+                ]
 
     var dimensions = {
         width: window.innerWidth * 0.85,
@@ -27,25 +38,37 @@ async function drawChart() {
         .style('transform', `translate(${dimensions.margins.left}px, ${dimensions.margins.top}px)`);
 
     const projection = d3.geoMercator()
-        .center([120, -25])
+        .center([2, 47])
         .scale(dimensions.boundedWidth / 3)
         .translate([dimensions.boundedWidth / 2, dimensions.boundedHeight / 2]);
 
-    dataset.features = dataset.features.filter(function(d) {
-        return d.properties.name == "Australia"
+    data = dataset.features.filter((country) => {
+
+        let match = 0;
+
+        for (let i = 0; i < region.length; i++) {
+            if (country.properties.name == region[i]) {
+                match++;
+                return true;
+            }
+        }
+
+        if (match < 1) {
+            return false;
+        }
     })
 
     console.log(dataset.features);
 
     bounds.append('g')
         .selectAll('path')
-        .data(dataset.features)
+        .data(data)
         .enter().append('path')
             .attr('fill', 'black')
             .attr('class', 'australia')
             .attr('d', d3.geoPath().projection(projection))
-            .style('stroke', 'black')
-            .style('stroke-width', 2)
+            .style('stroke', 'white')
+            .style('stroke-width', 1)
 
 }
 
