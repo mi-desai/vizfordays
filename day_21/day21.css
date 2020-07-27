@@ -1,0 +1,7 @@
+@import url('https://fonts.googleapis.com/css2?family=Signika:wght@400&display=swap');
+
+h2 {
+    display: flex;
+    justify-content: center;
+    font-family: 'Signika', sans-serif;
+}
