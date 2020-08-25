@@ -1,9 +1,7 @@
-let n = 50;
-let lines = 6;
-let random = d3.randomNormal(0, .2);
+let n = 100;
+let lines = 3;
 
-
-let randomNormal = d3.randomNormal(15,3);
+let randomNormal = d3.randomNormal(12,3);
 let randomExponential = d3.randomExponential(0.25);
 let randomLog = d3.randomLogNormal(0.8, 0.8);
 
@@ -13,7 +11,10 @@ let logData = d3.range(n).map(randomLog);
 
 let yDomain = findDomain(normalData, logData, exponentialData);
 
-let data = d3.range(lines).map(d => d3.range(n).map(random));
+let data = [normalData, exponentialData, logData]
+let randoms = [randomNormal, randomExponential, randomLog];
+
+// let data = d3.range(lines).map(d => d3.range(n).map(randomLog));
 
 let dimensions = {
     width: window.innerWidth * 0.98,
@@ -31,11 +32,11 @@ dimensions.boundedHeight = dimensions.height - dimensions.margins.top - dimensio
 
 // create the SVG
 
-const svg = d3.select("#viz").append("svg")
+const viz = d3.select("#viz").append("svg")
         .attr('width', dimensions.boundedWidth)
         .attr('height', dimensions.boundedHeight)
 
-const bounds = svg.append('g')
+const bounds = viz.append('g')
     .style('transform', `translate(${dimensions.margins.left}px, ${dimensions.margins.top}px)`);
 
 const xScale = d3.scaleLinear()
@@ -43,7 +44,7 @@ const xScale = d3.scaleLinear()
         .range([0, dimensions.boundedWidth]);
 
 const yScale = d3.scaleLinear()
-        .domain([-1, 1])
+        .domain(yDomain)
         .range([dimensions.boundedHeight, 0]);
 
 const line = d3.line()
@@ -66,13 +67,14 @@ const log = d3.line()
     .y(function(d, i) { return yScale(d); })
     .curve(d3.curveStepAfter);
 
+let functions = [normal, exp, log];
+let colors = ['teal', 'cornflowerblue', 'lightcoral'];
+
 bounds.append("defs").append("clipPath")
         .attr("id", "clip")
         .append("rect")
         .attr("width", dimensions.boundedWidth)
         .attr("height", dimensions.boundedHeight);
-
-console.log("this is the original data", data)
 
 function draw(i,speed,color){
 
@@ -81,7 +83,8 @@ function draw(i,speed,color){
             .append("path")
             .datum(data[i])
             .attr("class", "line")
-            .attr("stroke",color(Math.random()))
+            .attr("stroke",color[i])
+            .attr('stroke-width', 4)
             .transition()
             .duration(speed)
             .ease(d3.easeLinear)
@@ -90,10 +93,10 @@ function draw(i,speed,color){
 function tick() {
     
         // Push a new data point onto the back.
-        data[i].push(random());
+        data[i].push(randoms[i]());
         // Redraw the line.
         d3.select(this)
-            .attr("d", line)
+            .attr("d", functions[i])
             .attr("transform", null);
         // Slide it to the left.
         d3.active(this)
@@ -106,7 +109,7 @@ function tick() {
 }
 
 for (let i=0;i<lines;i++){
-    draw(i,Math.floor(Math.random() * 300)+100,d3.interpolateCool)
+    draw(i,250,colors)
 }
 
 function findDomain(normal, exp, log) {
